@@ -61,6 +61,6 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return status == UserStatus.ACTIVE || status == UserStatus.PENDING;
+        return status == UserStatus.ACTIVE;
     }
 }

@@ -45,4 +45,11 @@ public class UserController {
         UserDto userDto = userService.updatePreferences(principal.getId(), request);
         return ApiResponse.ok(userDto);
     }
+
+    @PostMapping("/me/deactivate")
+    @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+    @Operation(summary = "Deactivate current user account")
+    public void deactivateUser(@AuthenticationPrincipal UserPrincipal principal) {
+        userService.deactivateUser(principal.getId());
+    }
 }

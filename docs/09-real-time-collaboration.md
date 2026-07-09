@@ -187,12 +187,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 | Property | Value |
 |---|---|
-| **Destination** | `/topic/presence/{workspaceId}` |
-| **Purpose** | Presence updates for workspace members |
+| **Destination** | `/topic/workspace/{workspaceId}/presence` |
+| **Purpose** | Flat list of online user IDs in the workspace |
 | **Publishers** | Presence Module |
 | **Subscribers** | Users in the workspace |
 | **Authorization** | VIEWER+ in the workspace |
-| **Event Types** | `USER_ONLINE`, `USER_OFFLINE`, `USER_AWAY`, `PRESENCE_UPDATE` |
+| **Event Types** | `List<UUID>` (IDs of all active users in the workspace) |
 
 ---
 

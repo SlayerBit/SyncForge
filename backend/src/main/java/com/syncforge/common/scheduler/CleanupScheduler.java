@@ -54,9 +54,9 @@ public class CleanupScheduler {
         }
 
         try {
-            Instant notificationThreshold = now.minus(30, ChronoUnit.DAYS);
+            Instant notificationThreshold = now.minus(90, ChronoUnit.DAYS);
             notificationRepository.deleteExpired(notificationThreshold);
-            log.info("Cleaned up notifications older than 30 days.");
+            log.info("Cleaned up notifications older than 90 days.");
         } catch (Exception e) {
             log.error("Failed to clean up expired notifications", e);
         }

@@ -331,4 +331,11 @@ public class AuthServiceImpl implements AuthService {
         // Publish event
         eventPublisher.publishEvent(new PasswordResetCompleted(user.getId()));
     }
+
+    @org.springframework.context.event.EventListener
+    @org.springframework.transaction.annotation.Transactional
+    public void handleUserDeactivated(com.syncforge.module.user.event.UserDeactivated event) {
+        log.info("Handling UserDeactivated event for user: {}", event.userId());
+        tokenService.revokeAllUserTokens(event.userId());
+    }
 }

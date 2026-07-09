@@ -12,6 +12,7 @@ import com.syncforge.module.board.mapper.BoardMapper;
 import com.syncforge.module.board.repository.BoardColumnRepository;
 import com.syncforge.module.board.repository.BoardRepository;
 import com.syncforge.module.board.service.BoardService;
+import com.syncforge.module.board.service.BoardDeleteValidator;
 import com.syncforge.module.board.service.ColumnDeleteValidator;
 import com.syncforge.module.workspace.domain.Workspace;
 import com.syncforge.module.workspace.repository.WorkspaceRepository;
@@ -39,6 +40,7 @@ public class BoardServiceImpl implements BoardService {
     private final WorkspaceRepository workspaceRepository;
     private final BoardMapper boardMapper;
     private final List<ColumnDeleteValidator> deleteValidators;
+    private final List<BoardDeleteValidator> boardDeleteValidators;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher eventPublisher;
@@ -190,6 +192,22 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
+    @Transactional
+    public void deleteBoard(UUID boardId, UUID actorId) {
+        log.info("Deleting board: {}", boardId);
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Board", boardId));
+
+        // Run delete validators
+        for (BoardDeleteValidator validator : boardDeleteValidators) {
+            validator.validateDelete(boardId);
+        }
+
+        boardRepository.delete(board);
+        evictCache(boardId);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<BoardDto> getWorkspaceBoards(UUID workspaceId, boolean includeArchived) {
         List<Board> boards;
@@ -250,6 +268,12 @@ public class BoardServiceImpl implements BoardService {
         log.info("Deleting column: {}", columnId);
         BoardColumn column = boardColumnRepository.findById(columnId)
                 .orElseThrow(() -> new ResourceNotFoundException("BoardColumn", columnId));
+
+        // Verify last column constraint
+        long columnCount = boardColumnRepository.countByBoardId(column.getBoard().getId());
+        if (columnCount <= 1) {
+            throw new BusinessException("Cannot delete the last column on a board.", "MIN_COLUMN_LIMIT", HttpStatus.BAD_REQUEST);
+        }
 
         // Call SPI delete validation
         for (ColumnDeleteValidator validator : deleteValidators) {

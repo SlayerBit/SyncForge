@@ -40,7 +40,7 @@ public class NotificationController {
         return ApiResponse.ok(Map.of("unreadCount", count));
     }
 
-    @PostMapping("/{notificationId}/read")
+    @RequestMapping(value = "/{notificationId}/read", method = {RequestMethod.POST, RequestMethod.PATCH})
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Mark a specific notification as read")
     public void markRead(
@@ -49,10 +49,19 @@ public class NotificationController {
         notificationService.markRead(notificationId, principal.getId());
     }
 
-    @PostMapping("/read-all")
+    @PostMapping({"/read-all", "/mark-all-read"})
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Mark all user notifications as read")
     public void markAllRead(@AuthenticationPrincipal UserPrincipal principal) {
         notificationService.markAllRead(principal.getId());
+    }
+
+    @DeleteMapping("/{notificationId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Delete a specific notification")
+    public void deleteNotification(
+            @PathVariable UUID notificationId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        notificationService.deleteNotification(notificationId, principal.getId());
     }
 }

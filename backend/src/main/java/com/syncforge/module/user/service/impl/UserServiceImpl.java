@@ -23,6 +23,8 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -32,6 +34,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final String CACHE_KEY_PREFIX = "user:";
     private static final Duration BASE_TTL = Duration.ofMinutes(10);
@@ -132,6 +135,23 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAllById(userIds).stream()
                 .map(userMapper::toDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void deactivateUser(UUID userId) {
+        log.info("Deactivating user account: {}", userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+
+        user.deactivate();
+        userRepository.save(user);
+
+        // Evict user cache
+        evictCache(userId);
+
+        // Publish event
+        eventPublisher.publishEvent(new com.syncforge.module.user.event.UserDeactivated(userId));
     }
 
     private void evictCache(UUID userId) {

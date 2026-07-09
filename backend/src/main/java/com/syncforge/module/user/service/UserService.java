@@ -14,6 +14,7 @@ public interface UserService {
     UserDto getUserByEmail(String email);
     UserDto updateProfile(UUID userId, UpdateProfileRequest request);
     UserDto updatePreferences(UUID userId, UpdatePreferencesRequest request);
+    void deactivateUser(UUID userId);
     boolean existsByEmail(String email);
     User createUser(String email, String passwordHash, String displayName);
     List<UserDto> getUsersByIds(Collection<UUID> userIds);

@@ -72,6 +72,17 @@ public class BoardController {
         boardService.archiveBoard(boardId, principal.getId());
     }
 
+    @DeleteMapping("/boards/{boardId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Delete a board")
+    public void deleteBoard(
+            @PathVariable UUID boardId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        BoardDto board = boardService.getBoard(boardId);
+        authService.checkPermission(principal.getId(), board.workspaceId(), WorkspaceRole.ADMIN);
+        boardService.deleteBoard(boardId, principal.getId());
+    }
+
     @PostMapping("/boards/{boardId}/columns")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Add a new column to the board")

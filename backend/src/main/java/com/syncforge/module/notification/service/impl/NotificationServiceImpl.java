@@ -147,6 +147,21 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Transactional
+    public void deleteNotification(UUID notificationId, UUID userId) {
+        log.info("Deleting notification: {} for user: {}", notificationId, userId);
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification", notificationId));
+
+        if (!notification.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Notification not found for user.");
+        }
+
+        notificationRepository.delete(notification);
+        clearUnreadCache(userId);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public int getUnreadCount(UUID userId) {
         String key = String.format(UNREAD_CACHE_PREFIX, userId);

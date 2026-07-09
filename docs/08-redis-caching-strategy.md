@@ -83,9 +83,7 @@ All keys use colon (`:`) as separator. Lowercase throughout.
 | `rate_limit:{key}:{window}` | STRING (counter) | 2× window | Security | Rate limit counter |
 | `login:failed:{email}` | STRING (counter) | 30 min | Security | Failed login attempts |
 | `login:lockout:{email}` | STRING ("") | 15 min | Security | Account lockout flag |
-| `presence:user:{userId}` | HASH | 60 sec | Presence Module | User presence data |
-| `presence:workspace:{workspaceId}` | SET | 60 sec | Presence Module | Online users in workspace |
-| `presence:board:{boardId}` | SET | 60 sec | Presence Module | Online users viewing board |
+| `presence:{workspaceId}:{userId}` | STRING ("online") | 30 sec | Presence Module | User online presence in workspace |
 | `search:recent:{userId}` | LIST | 30 days | Search Module | Recent search queries |
 
 ### TTL Jitter
@@ -199,50 +197,19 @@ public boolean isBlacklisted(String jti) {
 
 | Property | Value |
 |---|---|
-| **Key** | `presence:user:{userId}` |
-| **Type** | HASH |
-| **Fields** | `status` (ONLINE/AWAY/OFFLINE), `workspaceId`, `boardId`, `lastSeen` |
-| **TTL** | 60 seconds (refreshed by heartbeat every 30 seconds) |
+| **Key** | `presence:{workspaceId}:{userId}` |
+| **Type** | STRING |
+| **Value** | `"online"` |
+| **TTL** | 30 seconds (refreshed by heartbeat / user activity) |
 
-### Workspace Presence Set
-
-| Property | Value |
-|---|---|
-| **Key** | `presence:workspace:{workspaceId}` |
-| **Type** | SET of user IDs |
-| **TTL** | 60 seconds (refreshed by heartbeat) |
-
-### Board Presence Set
-
-| Property | Value |
-|---|---|
-| **Key** | `presence:board:{boardId}` |
-| **Type** | SET of user IDs |
-| **TTL** | 60 seconds (refreshed by heartbeat) |
-
-### Heartbeat Implementation
+### Presence Heartbeat Implementation
 
 ```java
-public void heartbeat(UUID userId, UUID workspaceId, UUID boardId) {
-    String userKey = "presence:user:" + userId;
-    Map<String, String> fields = Map.of(
-        "status", "ONLINE",
-        "workspaceId", workspaceId.toString(),
-        "boardId", boardId != null ? boardId.toString() : "",
-        "lastSeen", Instant.now().toString()
-    );
-    redisTemplate.opsForHash().putAll(userKey, fields);
-    redisTemplate.expire(userKey, Duration.ofSeconds(60));
-
-    String wsKey = "presence:workspace:" + workspaceId;
-    redisTemplate.opsForSet().add(wsKey, userId.toString());
-    redisTemplate.expire(wsKey, Duration.ofSeconds(60));
-
-    if (boardId != null) {
-        String boardKey = "presence:board:" + boardId;
-        redisTemplate.opsForSet().add(boardKey, userId.toString());
-        redisTemplate.expire(boardKey, Duration.ofSeconds(60));
-    }
+@Override
+public void markOnline(UUID workspaceId, UUID userId) {
+    String key = String.format("presence:%s:%s", workspaceId, userId);
+    redisTemplate.opsForValue().set(key, "online", Duration.ofSeconds(30));
+    broadcastPresence(workspaceId);
 }
 ```
 

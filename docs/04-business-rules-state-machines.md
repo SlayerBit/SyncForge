@@ -54,9 +54,9 @@
 
 ### Deletion
 - Only OWNER can delete a workspace
-- Deletion is a soft operation: workspace is marked as deleted
-- All boards, tasks, comments, and activity within the workspace are cascade-soft-deleted
-- Soft-deleted workspaces are permanently removed after 30 days
+- Deletion is a hard operation: workspace is deleted immediately
+- All members, boards, columns, tasks, comments, and activity within the workspace are cascade-deleted via database foreign keys
+- Deleted workspaces are permanently and immediately removed
 
 ### Slug Rules
 - Generated from workspace name: `name.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("^-|-$", "")`

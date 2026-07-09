@@ -84,6 +84,19 @@ services:
     networks:
       - syncforge
 
+  frontend:
+    container_name: syncforge-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - syncforge
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   redis_data:

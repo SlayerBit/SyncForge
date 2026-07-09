@@ -12,6 +12,7 @@ public interface BoardService {
     BoardDetailDto getBoardWithColumns(UUID boardId);
     BoardDto updateBoard(UUID boardId, UpdateBoardRequest request, UUID actorId);
     void archiveBoard(UUID boardId, UUID actorId);
+    void deleteBoard(UUID boardId, UUID actorId);
     List<BoardDto> getWorkspaceBoards(UUID workspaceId, boolean includeArchived);
 
     ColumnDto addColumn(UUID boardId, CreateColumnRequest request, UUID actorId);

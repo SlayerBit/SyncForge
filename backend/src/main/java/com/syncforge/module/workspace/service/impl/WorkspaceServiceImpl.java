@@ -261,7 +261,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                 .collect(Collectors.toList());
 
         try {
-            redisTemplate.opsForValue().set(listCacheKey, members, Duration.ofMinutes(5));
+            redisTemplate.opsForValue().set(listCacheKey, members, withJitter(Duration.ofMinutes(5)));
         } catch (Exception e) {
             log.warn("Redis error writing workspace members: {}", e.getMessage());
         }
@@ -290,7 +290,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         if (memberOpt.isPresent()) {
             WorkspaceRole role = memberOpt.get().getRole();
             try {
-                redisTemplate.opsForValue().set(memberKey, role.name(), Duration.ofMinutes(5));
+                redisTemplate.opsForValue().set(memberKey, role.name(), withJitter(Duration.ofMinutes(5)));
             } catch (Exception e) {
                 log.warn("Redis error caching membership role: {}", e.getMessage());
             }
@@ -463,5 +463,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         } catch (Exception e) {
             log.warn("Redis error evicting membership caches: {}", e.getMessage());
         }
+    }
+
+    private Duration withJitter(Duration baseTtl) {
+        long jitterMs = java.util.concurrent.ThreadLocalRandom.current().nextLong(0, baseTtl.toMillis() / 5);
+        return baseTtl.plusMillis(jitterMs);
     }
 }

@@ -101,25 +101,14 @@ public class CommentServiceImpl implements CommentService, CommentCountProvider 
         }
 
         for (String name : matchedNames) {
-            // Find user by display name or email
-            Optional<User> userOpt = userRepository.findByEmailIgnoreCase(name);
-            if (userOpt.isEmpty()) {
-                // Try display name lookup (since query is simple, we check list or custom query. Let's do list of users or database search)
-                // In a production environment, display name is checked. Let's search by email or exact name.
-                // We'll search case-insensitive on display name
-                userOpt = userRepository.findAll().stream()
-                        .filter(u -> u.getDisplayName().equalsIgnoreCase(name))
-                        .findFirst();
-            }
+            // Find user by display name or email in the workspace members
+            Optional<User> userOpt = workspaceMemberRepository.findMemberByWorkspaceIdAndNameIgnoreCase(workspaceId, name);
 
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
-                // Verify user is in workspace
-                if (workspaceMemberRepository.existsByWorkspaceIdAndUserId(workspaceId, user.getId())) {
-                    Mention mention = new Mention(comment, user);
-                    mentionRepository.save(mention);
-                    log.info("Saved mention for user: {} in comment: {}", user.getId(), comment.getId());
-                }
+                Mention mention = new Mention(comment, user);
+                mentionRepository.save(mention);
+                log.info("Saved mention for user: {} in comment: {}", user.getId(), comment.getId());
             }
         }
     }

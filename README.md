@@ -1,6 +1,6 @@
-# SyncForge Backend
+# SyncForge
 
-SyncForge is a high-performance, real-time project management and team collaboration platform built as a **Modular Monolith** using **Java 21**, **Spring Boot 3.3**, **PostgreSQL 16**, and **Redis 7**.
+SyncForge is a high-performance, real-time project management and team collaboration platform built as a **Modular Monolith** using **Java 21**, **Spring Boot 3.3**, **PostgreSQL 16**, **Redis 7**, and **React 18 + TypeScript 5**.
 
 ---
 
@@ -46,7 +46,8 @@ com.syncforge/
 Ensure you have the following installed locally:
 *   Java 21 (Temurin OpenJDK recommended)
 *   Maven 3.9+
-*   Docker & Docker Compose (for running DB, Redis, and Mailhog)
+*   Node.js 20+ & npm 10+
+*   Docker & Docker Compose (for running DB, Redis, Mailhog, and Prometheus)
 
 ---
 
@@ -68,27 +69,45 @@ A template file [`.env.example`](file:///.env.example) outlines all variable con
 
 ## 🚀 Setup & Execution
 
-### 1. Start Services via Docker Compose
-To spin up PostgreSQL, Redis, Mailhog (for sandbox emails), and Prometheus, run:
+### Running Everything with Docker Compose
+To build and spin up the complete stack (Backend, Frontend, PostgreSQL, Redis, Mailhog, and Prometheus) in Docker containers, run:
 ```bash
-docker compose up -d
+docker compose up --build -d
+```
+The services will be accessible at:
+*   **Frontend SPA**: `http://localhost` (Port 80)
+*   **Backend API**: `http://localhost:8080`
+*   **Mailhog UI** (for sandbox emails): `http://localhost:8025`
+*   **Prometheus**: `http://localhost:9090`
+
+### Running Locally for Development
+
+#### 1. Start Infrastructure Container Services
+Spin up PostgreSQL, Redis, and Mailhog:
+```bash
+docker compose up -d postgres redis mailhog prometheus
 ```
 
-### 2. Database Migrations
-Database versioning is handled automatically via Flyway on startup. Schema migration files are located in [db/migration](file:///Users/slayer/SyncForge/backend/src/main/resources/db/migration).
-
-### 3. Local Development Run
-To build and start the Spring Boot backend locally, run:
+#### 2. Run Backend API Server
+Using the Maven wrapper, compile and start the Spring Boot server:
 ```bash
 cd backend
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
-### 4. Build Commands
-To compile the project and build the fat jar, run:
+#### 3. Run Frontend SPA Server
+Install packages and start the Vite development server:
 ```bash
-mvn clean package -DskipTests
+cd frontend
+npm install
+npm run dev
 ```
+The local dev server will be accessible at `http://localhost:5173`.
+
+### 4. Build Commands
+To compile and build production jars and static bundles manually:
+*   **Backend**: `cd backend && ./mvnw clean package -DskipTests`
+*   **Frontend**: `cd frontend && npm run build`
 
 ---
 
