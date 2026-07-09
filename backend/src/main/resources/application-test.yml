@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/syncforge_test
+    username: syncforge
+    password: syncforge_dev
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  mail:
+    host: localhost
+    port: 1025
+
+syncforge:
+  jwt:
+    secret: test-secret-key-minimum-32-characters-long-for-hs384-secret-key-which-is-long-enough
+  cors:
+    allowed-origins: http://localhost:3000
+
+logging:
+  level:
+    com.syncforge: DEBUG
+    org.springframework.web: INFO

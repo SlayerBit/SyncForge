@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: syncforge
+  profiles:
+    active: dev
+  datasource:
+    hikari:
+      connection-timeout: 10000
+      idle-timeout: 300000
+      max-lifetime: 900000
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          time_zone: UTC
+  mail:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  shutdown: graceful
+
+syncforge:
+  jwt:
+    access-expiry-seconds: 900
+    refresh-expiry-seconds: 604800
+  base-url: http://localhost:3000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: syncforge

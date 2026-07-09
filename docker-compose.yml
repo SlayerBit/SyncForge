@@ -1,0 +1,94 @@
+version: '3.8'
+name: syncforge
+
+services:
+  backend:
+    container_name: syncforge-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/syncforge
+      - SPRING_DATASOURCE_USERNAME=syncforge
+      - SPRING_DATASOURCE_PASSWORD=syncforge_dev
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SYNCFORGE_JWT_SECRET=dev-secret-key-minimum-32-characters-long-for-hs384
+      - SPRING_MAIL_HOST=mailhog
+      - SPRING_MAIL_PORT=1025
+      - SYNCFORGE_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - syncforge
+    restart: unless-stopped
+
+  postgres:
+    container_name: syncforge-postgres
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=syncforge
+      - POSTGRES_USER=syncforge
+      - POSTGRES_PASSWORD=syncforge_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U syncforge -d syncforge"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - syncforge
+
+  redis:
+    container_name: syncforge-redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - syncforge
+
+  mailhog:
+    container_name: syncforge-mailhog
+    image: mailhog/mailhog:latest
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    networks:
+      - syncforge
+
+  prometheus:
+    container_name: syncforge-prometheus
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - syncforge
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+
+networks:
+  syncforge:
+    driver: bridge

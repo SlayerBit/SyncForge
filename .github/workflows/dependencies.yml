@@ -1,0 +1,15 @@
+name: Dependency Check
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'  # Every Monday at 8 AM
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Maven Dependency Check
+        run: mvn dependency-check:check -B
+        working-directory: backend

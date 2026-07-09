@@ -1,0 +1,39 @@
+# System Files
+.DS_Store
+Thumbs.db
+
+# Build Artifacts
+**/target/
+**/build/
+*.jar
+*.war
+*.ear
+*.class
+
+# IDEs
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+*.code-workspace
+.factorypath
+
+# Environment & Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+
+# Logs
+logs/
+*.log
+**/target/logs/
+
+# Docker / Compose local states
+docker/postgres/data/
+docker/redis/data/

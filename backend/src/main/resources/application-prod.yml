@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+  mail:
+    host: ${SYNCFORGE_MAIL_HOST}
+    port: ${SYNCFORGE_MAIL_PORT}
+    username: ${SYNCFORGE_MAIL_USERNAME}
+    password: ${SYNCFORGE_MAIL_PASSWORD}
+
+syncforge:
+  jwt:
+    secret: ${SYNCFORGE_JWT_SECRET}
+  cors:
+    allowed-origins: ${SYNCFORGE_CORS_ALLOWED_ORIGINS}
+  base-url: ${SYNCFORGE_BASE_URL}
+
+logging:
+  level:
+    com.syncforge: INFO
+    org.springframework.web: WARN
