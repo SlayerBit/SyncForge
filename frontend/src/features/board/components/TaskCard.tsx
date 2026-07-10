@@ -12,11 +12,11 @@ interface TaskCardProps {
 }
 
 const priorityColors = {
-  LOW: 'border-l-4 border-l-success bg-success-subtle/10',
-  MEDIUM: 'border-l-4 border-l-warning bg-warning-subtle/10',
-  HIGH: 'border-l-4 border-l-danger bg-danger-subtle/10',
-  URGENT: 'border-l-4 border-l-danger bg-danger/20 animate-pulse',
-  NONE: 'border-l-4 border-l-border bg-bg-secondary',
+  LOW: 'border-l-2 border-l-success',
+  MEDIUM: 'border-l-2 border-l-warning',
+  HIGH: 'border-l-2 border-l-danger',
+  URGENT: 'border-l-2 border-l-danger bg-danger-subtle/10',
+  NONE: 'border-l-2 border-l-transparent',
 }
 
 export function TaskCard({ task, onClick }: TaskCardProps) {
@@ -64,7 +64,7 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
       {...listeners}
       onClick={onClick}
       className={cn(
-        'group rounded-lg border border-border bg-bg-secondary p-3 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all select-none',
+        'group rounded-lg border border-border bg-bg-secondary p-3.5 shadow-sm hover:shadow-md hover:-translate-y-0.5 cursor-grab active:cursor-grabbing transition-all duration-200 select-none active:scale-[0.98]',
         priorityColors[task.priority]
       )}
     >

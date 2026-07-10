@@ -39,6 +39,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -168,6 +169,10 @@ public class AuthServiceImpl implements AuthService {
         // Clear failed logs on success
         redisTemplate.delete(failedCounterKey);
 
+        if (user.getStatus() == UserStatus.PENDING) {
+            throw new BusinessException("Please verify your email address before logging in.", "EMAIL_UNVERIFIED", HttpStatus.FORBIDDEN);
+        }
+
         if (user.getStatus() == UserStatus.SUSPENDED || user.getStatus() == UserStatus.DEACTIVATED) {
             throw new BusinessException("Your account is " + user.getStatus().name(), "FORBIDDEN", HttpStatus.FORBIDDEN);
         }
@@ -272,6 +277,20 @@ public class AuthServiceImpl implements AuthService {
         log.info("Resending verification for email: {}", email);
         User user = userRepository.findByEmailIgnoreCase(email).orElse(null);
         if (user != null && user.getStatus() == UserStatus.PENDING) {
+            Optional<VerificationToken> existingTokenOpt = verificationTokenRepository.findByUserIdAndStatus(user.getId(), TokenStatus.PENDING);
+            if (existingTokenOpt.isPresent()) {
+                VerificationToken existingToken = existingTokenOpt.get();
+                Duration elapsed = Duration.between(existingToken.getCreatedAt(), Instant.now());
+                if (elapsed.getSeconds() < 60) {
+                    long waitSecs = 60 - elapsed.getSeconds();
+                    throw new BusinessException(
+                            "Please wait " + waitSecs + " seconds before requesting a new verification email.",
+                            "COOLDOWN_ACTIVE",
+                            HttpStatus.TOO_MANY_REQUESTS
+                    );
+                }
+            }
+
             verificationTokenRepository.updateStatusForPendingUserTokens(user.getId(), TokenStatus.EXPIRED);
 
             String rawToken = generateSecureToken();

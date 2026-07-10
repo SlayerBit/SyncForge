@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { FolderKanban, Archive, Save, ArrowLeft } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Archive, Save, Edit3 } from 'lucide-react'
 import { useArchiveBoardMutation, useUpdateBoardMutation } from '../api/board.queries'
 import { useWorkspaceMembersQuery } from '@/features/workspace/api/workspace.queries'
 import { Button } from '@/components/ui/button'
@@ -66,18 +66,11 @@ export function BoardHeader({ board }: BoardHeaderProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border pb-4 text-text-primary">
-      <div className="space-y-1">
-        <Link
-          to={`/workspaces/${board.workspaceId}`}
-          className="text-xs font-semibold text-accent-primary flex items-center gap-1 hover:underline"
-        >
-          <ArrowLeft className="h-3 w-3" />
-          Back to Workspace
-        </Link>
-        <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-4 text-text-primary select-none">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 group">
           {isEditing ? (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5 animate-scale-in">
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -85,19 +78,22 @@ export function BoardHeader({ board }: BoardHeaderProps) {
                 onKeyDown={(e) => e.key === 'Enter' && handleUpdate()}
                 autoFocus
               />
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-success" onClick={handleUpdate}>
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-success hover:bg-success/10 shrink-0" onClick={handleUpdate}>
                 <Save className="h-4 w-4" />
               </Button>
             </div>
           ) : (
-            <h1
-              className="text-lg font-bold tracking-tight cursor-pointer hover:text-accent-primary transition-colors"
-              onClick={() => setIsEditing(true)}
-            >
-              {board.name}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1
+                className="text-base font-semibold tracking-tight cursor-pointer hover:text-accent-primary transition-colors flex items-center gap-1.5"
+                onClick={() => setIsEditing(true)}
+              >
+                {board.name}
+                <Edit3 className="h-3.5 w-3.5 text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity" />
+              </h1>
+            </div>
           )}
-          <span className="text-[10px] text-text-tertiary px-1.5 py-0.5 rounded bg-bg-tertiary">
+          <span className="text-[9px] font-bold text-text-tertiary px-1.5 py-0.5 rounded-full bg-bg-tertiary border border-border/40">
             v{board.version}
           </span>
         </div>
@@ -106,14 +102,14 @@ export function BoardHeader({ board }: BoardHeaderProps) {
       <div className="flex items-center gap-4">
         {/* Board Presence avatar list */}
         {activeMembersOnBoard.length > 0 && (
-          <div className="flex -space-x-1 items-center">
-            <span className="text-[10px] text-text-tertiary mr-2">Viewing:</span>
+          <div className="flex -space-x-1.5 items-center">
+            <span className="text-[10px] text-text-tertiary mr-2 select-none">Active:</span>
             {activeMembersOnBoard.map((p) => (
               <Avatar
                 key={p.userId}
                 displayName={p.displayName}
                 size="xs"
-                className="ring-1 ring-background"
+                className="ring-2 ring-bg-primary hover:-translate-y-0.5 transition-transform"
                 status="ONLINE"
               />
             ))}
@@ -123,10 +119,10 @@ export function BoardHeader({ board }: BoardHeaderProps) {
         <Button
           variant="outline"
           size="sm"
-          className="text-xs hover:bg-danger hover:text-white"
+          className="text-xs hover:bg-danger/10 hover:text-danger hover:border-danger/30 transition-all gap-1.5"
           onClick={() => setArchiveOpen(true)}
         >
-          <Archive className="h-4 w-4 mr-1.5" />
+          <Archive className="h-3.5 w-3.5" />
           Archive Board
         </Button>
       </div>

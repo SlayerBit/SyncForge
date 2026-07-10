@@ -40,6 +40,7 @@ module.exports = {
           primary: "var(--accent-primary)",
           "primary-hover": "var(--accent-primary-hover)",
           "primary-subtle": "var(--accent-primary-subtle)",
+          "primary-foreground": "var(--accent-primary-foreground)",
         },
         success: {
           DEFAULT: "var(--success)",
@@ -58,7 +59,7 @@ module.exports = {
         // standard shadcn definitions
         primary: {
           DEFAULT: "var(--accent-primary)",
-          foreground: "var(--text-primary)",
+          foreground: "var(--accent-primary-foreground)",
         },
         secondary: {
           DEFAULT: "var(--bg-secondary)",
@@ -66,7 +67,7 @@ module.exports = {
         },
         destructive: {
           DEFAULT: "var(--danger)",
-          foreground: "var(--text-primary)",
+          foreground: "var(--accent-primary-foreground)",
         },
         muted: {
           DEFAULT: "var(--bg-tertiary)",
@@ -104,10 +105,25 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: 0 },
         },
+        "fade-in": {
+          from: { opacity: 0 },
+          to: { opacity: 1 },
+        },
+        "slide-up": {
+          from: { transform: "translateY(8px)", opacity: 0 },
+          to: { transform: "translateY(0)", opacity: 1 },
+        },
+        "scale-in": {
+          from: { transform: "scale(0.96)", opacity: 0 },
+          to: { transform: "scale(1)", opacity: 1 },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "slide-up": "slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "scale-in": "scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards",
       },
     },
   },

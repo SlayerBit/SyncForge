@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useLoginMutation } from '../api/auth.queries'
+import { authApi } from '../api/auth.api'
 import { toast } from 'sonner'
 
 const loginSchema = z.object({
@@ -21,6 +22,9 @@ export function LoginForm() {
   const navigate = useNavigate()
   const loginMutation = useLoginMutation()
   const [showPassword, setShowPassword] = React.useState(false)
+  const [showResend, setShowResend] = React.useState(false)
+  const [unverifiedEmail, setUnverifiedEmail] = React.useState('')
+  const [resending, setResending] = React.useState(false)
 
   const {
     register,
@@ -37,10 +41,33 @@ export function LoginForm() {
         navigate('/')
       },
       onError: (err: any) => {
-        const msg = err.response?.data?.message || 'Invalid credentials'
+        const errorData = err.response?.data
+        const msg = errorData?.message || 'Invalid credentials'
         toast.error(msg)
+        
+        if (errorData?.error === 'EMAIL_UNVERIFIED') {
+          setShowResend(true)
+          setUnverifiedEmail(data.email)
+        } else {
+          setShowResend(false)
+        }
       },
     })
+  }
+
+  const handleResendVerification = async () => {
+    if (!unverifiedEmail) return
+    setResending(true)
+    try {
+      await authApi.resendVerification(unverifiedEmail)
+      toast.success('Verification email sent! Please check your inbox.')
+      setShowResend(false)
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Failed to resend verification email'
+      toast.error(msg)
+    } finally {
+      setResending(false)
+    }
   }
 
   return (
@@ -91,6 +118,25 @@ export function LoginForm() {
           <p className="text-xs text-danger font-medium">{errors.password.message}</p>
         )}
       </div>
+
+      {showResend && (
+        <div className="p-3.5 rounded-lg border border-warning/30 bg-warning/5 text-xs text-text-primary space-y-2">
+          <p className="text-text-secondary leading-normal">
+            Your email is not verified yet. Please check your inbox or request a new verification link.
+          </p>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="w-full h-8 text-xs font-semibold"
+            onClick={handleResendVerification}
+            disabled={resending}
+          >
+            {resending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+            Resend Verification Link
+          </Button>
+        </div>
+      )}
 
       <Button type="submit" className="w-full mt-2" disabled={loginMutation.isPending}>
         {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

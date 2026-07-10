@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { notificationApi } from '../api/notification.api'
 import { NotificationDto } from '@/types/common.types'
 import { formatDistanceToNow } from 'date-fns'
+import { cn } from '@/lib/utils'
 
 export function NotificationsPage() {
   const queryClient = useQueryClient()
@@ -64,13 +65,6 @@ export function NotificationsPage() {
     }
 
     if (notification.referenceType === 'TASK' && notification.referenceId) {
-      // In a full implementation, we navigate to the task's board and open it.
-      // We can fetch task details to find its boardId or try to route appropriately.
-      // Here, if it references a task, we try to navigate if possible.
-      // If we don't have boardId, we could check if we can fetch it, or navigate to dashboard.
-      // For now, let's open it or direct the user.
-      // If we have boardId on reference, that is ideal, otherwise navigate to dashboard
-      // Let's redirect to dashboard/board page or let the user know.
       navigate('/')
     } else if (notification.referenceType === 'WORKSPACE' && notification.referenceId) {
       navigate(`/workspaces/${notification.referenceId}`)
@@ -81,14 +75,14 @@ export function NotificationsPage() {
   const filteredNotifications = filter === 'unread' ? list.filter((n: NotificationDto) => !n.read) : list
 
   return (
-    <div className="max-w-[800px] mx-auto py-8 px-4 space-y-6">
-      <div className="flex items-center justify-between border-b border-border/40 pb-4">
+    <div className="max-w-[760px] mx-auto py-8 px-4 space-y-6 select-none animate-fade-in text-text-primary">
+      <div className="flex items-center justify-between border-b border-border/40 pb-5">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 bg-accent-primary-subtle rounded-md flex items-center justify-center text-accent-primary">
+          <div className="h-8 w-8 bg-accent-primary/10 border border-accent-primary/20 rounded-lg flex items-center justify-center text-accent-primary">
             <Bell className="h-4 w-4" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Notifications</h1>
+            <h1 className="text-lg font-bold tracking-tight">Notifications</h1>
             <p className="text-xs text-text-secondary">
               Manage your notifications and alerts.
             </p>
@@ -110,24 +104,26 @@ export function NotificationsPage() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2 border-b border-border/20 pb-2 text-xs">
+      <div className="flex items-center gap-2 border-b border-border/40 pb-2 text-xs">
         <button
           onClick={() => setFilter('all')}
-          className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
+          className={cn(
+            "px-3 py-1.5 rounded-lg font-semibold transition-all duration-200 select-none relative",
             filter === 'all'
-              ? 'bg-bg-tertiary text-text-primary'
-              : 'text-text-secondary hover:text-text-primary'
-          }`}
+              ? "bg-bg-secondary border border-border/60 text-text-primary shadow-sm"
+              : "text-text-secondary hover:text-text-primary hover:bg-bg-secondary/40"
+          )}
         >
-          All
+          All Notifications
         </button>
         <button
           onClick={() => setFilter('unread')}
-          className={`px-3 py-1.5 rounded-md font-medium transition-colors flex items-center gap-1.5 ${
+          className={cn(
+            "px-3 py-1.5 rounded-lg font-semibold transition-all duration-200 select-none flex items-center gap-2 relative",
             filter === 'unread'
-              ? 'bg-bg-tertiary text-text-primary'
-              : 'text-text-secondary hover:text-text-primary'
-          }`}
+              ? "bg-bg-secondary border border-border/60 text-text-primary shadow-sm"
+              : "text-text-secondary hover:text-text-primary hover:bg-bg-secondary/40"
+          )}
         >
           <span>Unread</span>
           {unreadCount > 0 && (
@@ -147,35 +143,36 @@ export function NotificationsPage() {
           description="You don't have any notifications right now."
         />
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {filteredNotifications.map((notification: NotificationDto) => (
             <div
               key={notification.id}
               onClick={() => handleNotificationClick(notification)}
-              className={`flex items-start justify-between p-3.5 rounded-lg border transition-all cursor-pointer ${
+              className={cn(
+                "flex items-start justify-between p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden group active:scale-[0.99]",
                 notification.read
-                  ? 'bg-bg-primary hover:bg-bg-secondary border-border/30 text-text-secondary'
-                  : 'bg-bg-secondary hover:bg-bg-tertiary border-border shadow-sm text-text-primary'
-              }`}
+                  ? 'bg-bg-primary hover:bg-bg-secondary/40 border-border/40 text-text-secondary'
+                  : 'bg-bg-secondary hover:bg-bg-tertiary/60 border-border/80 shadow-sm text-text-primary'
+              )}
             >
-              <div className="space-y-1 pr-4">
+              <div className="space-y-1.5 pr-4 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm">{notification.title}</span>
+                  <span className="font-semibold text-xs text-text-primary">{notification.title}</span>
                   {!notification.read && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-accent-primary shrink-0" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-accent-primary shrink-0 animate-pulse" />
                   )}
                 </div>
                 {notification.message && (
-                  <p className="text-xs text-text-secondary leading-relaxed">
+                  <p className="text-[11px] text-text-secondary leading-relaxed max-w-[540px]">
                     {notification.message}
                   </p>
                 )}
-                <span className="text-[10px] text-text-tertiary block pt-0.5">
+                <span className="text-[9px] text-text-tertiary block pt-0.5">
                   {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
                 </span>
               </div>
 
-              <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                 {!notification.read && (
                   <Button
                     variant="ghost"
@@ -190,7 +187,7 @@ export function NotificationsPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-text-tertiary hover:text-danger hover:bg-danger-subtle"
+                  className="h-7 w-7 text-text-tertiary hover:text-danger hover:bg-danger/10"
                   onClick={() => deleteMutation.mutate(notification.id)}
                   title="Delete"
                 >

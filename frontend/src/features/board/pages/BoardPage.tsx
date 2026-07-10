@@ -31,6 +31,7 @@ import { ColumnDto, TaskDto } from '@/types/common.types'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { BoardSkeleton } from '@/components/shared/LoadingSkeleton'
 
 export function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>()
@@ -96,7 +97,7 @@ export function BoardPage() {
   }, [boardId, board?.workspaceId, queryClient])
 
   if (loadingBoard) {
-    return <div className="p-8 text-text-secondary">Loading board canvas...</div>
+    return <BoardSkeleton />
   }
 
   if (!board) {

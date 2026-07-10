@@ -15,11 +15,11 @@
   - Maximum 128 characters
 - New accounts start in `PENDING` status
 - Account becomes `ACTIVE` only after email verification
-- `PENDING` accounts can log in but cannot create workspaces or join invitations
+- `PENDING` accounts cannot log in or access any API endpoints until verified
 
 ### Account Status
 - Only `ACTIVE` users can perform business operations (create workspaces, join, etc.)
-- `PENDING` users can only: view profile, update profile, verify email, resend verification
+- `PENDING` users cannot access the workspace application; they must first verify their email and activate their account
 - `SUSPENDED` users cannot log in; existing sessions are invalidated
 - `DEACTIVATED` users cannot log in; data is retained for 90 days before permanent deletion
 

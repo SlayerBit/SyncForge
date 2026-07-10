@@ -51,15 +51,15 @@ export function Avatar({ displayName = '?', email, src, size = 'md', status, cla
   // Generate background color class from display name hash
   const getBgColor = (name: string) => {
     const colors = [
-      'bg-red-500 text-white',
-      'bg-orange-500 text-white',
-      'bg-amber-500 text-white',
-      'bg-emerald-500 text-white',
-      'bg-cyan-500 text-white',
-      'bg-blue-500 text-white',
-      'bg-indigo-500 text-white',
-      'bg-purple-500 text-white',
-      'bg-pink-500 text-white',
+      'bg-[#f87171]/15 text-[#f87171] border border-[#f87171]/25',
+      'bg-[#fb923c]/15 text-[#fb923c] border border-[#fb923c]/25',
+      'bg-[#fbbf24]/15 text-[#fbbf24] border border-[#fbbf24]/25',
+      'bg-[#34d399]/15 text-[#34d399] border border-[#34d399]/25',
+      'bg-[#22d3ee]/15 text-[#22d3ee] border border-[#22d3ee]/25',
+      'bg-[#60a5fa]/15 text-[#60a5fa] border border-[#60a5fa]/25',
+      'bg-[#818cf8]/15 text-[#818cf8] border border-[#818cf8]/25',
+      'bg-[#c084fc]/15 text-[#c084fc] border border-[#c084fc]/25',
+      'bg-[#f472b6]/15 text-[#f472b6] border border-[#f472b6]/25',
     ]
     let hash = 0
     for (let i = 0; i < name.length; i++) {

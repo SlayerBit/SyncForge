@@ -50,8 +50,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 } else {
                     UserPrincipal principal = tokenProvider.validateAndGetPrincipal(jwt);
 
-                    if (principal.getStatus() == UserStatus.SUSPENDED || principal.getStatus() == UserStatus.DEACTIVATED) {
+                    if (principal.getStatus() == UserStatus.PENDING) {
+                        log.warn("Blocked request from user: {} due to unverified email", principal.getId());
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.setContentType("application/json");
+                        response.getWriter().write(String.format(
+                                "{\"status\":403,\"error\":\"EMAIL_UNVERIFIED\",\"message\":\"Please verify your email address.\",\"timestamp\":\"%s\"}",
+                                java.time.Instant.now().toString()
+                        ));
+                        return;
+                    } else if (principal.getStatus() == UserStatus.SUSPENDED || principal.getStatus() == UserStatus.DEACTIVATED) {
                         log.warn("Blocked request from user: {} due to status: {}", principal.getId(), principal.getStatus());
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.setContentType("application/json");
+                        response.getWriter().write(String.format(
+                                "{\"status\":403,\"error\":\"FORBIDDEN\",\"message\":\"Your account is %s.\",\"timestamp\":\"%s\"}",
+                                principal.getStatus().name(),
+                                java.time.Instant.now().toString()
+                        ));
+                        return;
                     } else {
                         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                                 principal, null, principal.getAuthorities());

@@ -69,8 +69,20 @@ A template file [`.env.example`](file:///.env.example) outlines all variable con
 
 ## 🚀 Setup & Execution
 
-### Running Everything with Docker Compose
-To build and spin up the complete stack (Backend, Frontend, PostgreSQL, Redis, Mailhog, and Prometheus) in Docker containers, run:
+### 1. Developer Startup & Helper Scripts
+You can use the helper scripts inside the `scripts/` directory to manage your environment:
+*   **Start Infrastructure**: Run `./scripts/startup.sh` to copy `.env` from template, launch Docker containers, and block until PostgreSQL and Redis are ready to accept connections.
+*   **Stop Infrastructure**: Run `./scripts/shutdown.sh` to gracefully stop containers.
+*   **Reset Environment**: Run `./scripts/shutdown.sh --reset` to stop containers and completely wipe persistent database and redis volumes.
+
+### 2. Pre-seeded Developer Account (Dev Mode)
+When running the Spring Boot backend with the `dev` profile (active by default), the application automatically checks the database on startup. If empty, it seeds the following mock structures:
+*   **Demo User**: `demo@syncforge.com` / `Password123!` (Active Status)
+*   **Demo Workspace**: `Demo Workspace` (Slug: `demo-workspace`)
+*   **Demo Kanban Board**: `SyncForge Kanban` (Prefix: `SF`) populated with standard `To Do`, `In Progress`, and `Done` columns and default tasks.
+
+### 3. Running Everything with Docker Compose
+To build and spin up the complete stack (Backend, Frontend, PostgreSQL, Redis, Mailhog, and Prometheus) in Docker containers:
 ```bash
 docker compose up --build -d
 ```
@@ -80,22 +92,22 @@ The services will be accessible at:
 *   **Mailhog UI** (for sandbox emails): `http://localhost:8025`
 *   **Prometheus**: `http://localhost:9090`
 
-### Running Locally for Development
+### 4. Running Locally for Development
 
-#### 1. Start Infrastructure Container Services
+#### A. Start Infrastructure Container Services
 Spin up PostgreSQL, Redis, and Mailhog:
 ```bash
-docker compose up -d postgres redis mailhog prometheus
+./scripts/startup.sh
 ```
 
-#### 2. Run Backend API Server
+#### B. Run Backend API Server
 Using the Maven wrapper, compile and start the Spring Boot server:
 ```bash
 cd backend
 ./mvnw spring-boot:run
 ```
 
-#### 3. Run Frontend SPA Server
+#### C. Run Frontend SPA Server
 Install packages and start the Vite development server:
 ```bash
 cd frontend
@@ -104,7 +116,7 @@ npm run dev
 ```
 The local dev server will be accessible at `http://localhost:5173`.
 
-### 4. Build Commands
+### 5. Build Commands
 To compile and build production jars and static bundles manually:
 *   **Backend**: `cd backend && ./mvnw clean package -DskipTests`
 *   **Frontend**: `cd frontend && npm run build`
