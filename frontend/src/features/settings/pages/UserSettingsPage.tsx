@@ -94,7 +94,7 @@ export function UserSettingsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
           {/* Profile Section */}
-          <section className="bg-bg-secondary border border-border/80 rounded-xl p-5 space-y-4 shadow-sm">
+          <section className="bg-bg-secondary/45 border border-border/60 rounded-2xl p-5 space-y-4 shadow-xs">
             <h2 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b border-border/40 pb-2.5 text-text-tertiary">
               <User className="h-4 w-4 text-accent-primary" />
               Profile Details
@@ -102,7 +102,7 @@ export function UserSettingsPage() {
             <form onSubmit={handleProfileSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-[10px] uppercase font-bold text-text-tertiary">Email Address</Label>
-                <Input id="email" type="email" value={user?.email || ''} disabled className="bg-bg-primary border-border/60 text-text-tertiary text-xs h-8.5" />
+                <Input id="email" type="email" value={user?.email || ''} disabled className="bg-bg-primary/50 border-border/60 text-text-tertiary text-xs h-9 rounded-xl" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="displayName" className="text-[10px] uppercase font-bold text-text-tertiary">Display Name</Label>
@@ -112,17 +112,17 @@ export function UserSettingsPage() {
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="Enter display name"
                   required
-                  className="text-xs h-8.5"
+                  className="text-xs h-9 rounded-xl bg-bg-primary border-border/60"
                 />
               </div>
-              <Button type="submit" disabled={updateProfileMutation.isPending} size="sm" className="h-8.5 text-xs font-medium">
+              <Button type="submit" disabled={updateProfileMutation.isPending} size="sm" className="h-9 text-xs font-semibold px-4 rounded-xl active:scale-95 transition-all">
                 Save Profile
               </Button>
             </form>
           </section>
 
           {/* Preferences Section */}
-          <section className="bg-bg-secondary border border-border/80 rounded-xl p-5 space-y-4 shadow-sm">
+          <section className="bg-bg-secondary/45 border border-border/60 rounded-2xl p-5 space-y-4 shadow-xs">
             <h2 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b border-border/40 pb-2.5 text-text-tertiary">
               <Settings className="h-4 w-4 text-accent-primary" />
               Application Preferences
@@ -186,7 +186,7 @@ export function UserSettingsPage() {
                 </button>
               </div>
 
-              <Button type="submit" disabled={updatePreferencesMutation.isPending} size="sm" className="h-8.5 text-xs font-medium">
+              <Button type="submit" disabled={updatePreferencesMutation.isPending} size="sm" className="h-9 text-xs font-semibold px-4 rounded-xl active:scale-95 transition-all">
                 Save Preferences
               </Button>
             </form>

@@ -96,45 +96,45 @@ export function WorkspaceSettingsPage() {
         </p>
       </div>
 
-      <form onSubmit={handleUpdate} className="space-y-4 rounded-lg border border-border bg-bg-secondary p-6 shadow-sm">
-        <div className="space-y-1">
-          <Label htmlFor="name">Workspace Name</Label>
-          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+      <form onSubmit={handleUpdate} className="space-y-4 rounded-2xl border border-border/60 bg-bg-secondary/45 p-6 shadow-xs select-none">
+        <div className="space-y-1.5">
+          <Label htmlFor="name" className="text-[10px] uppercase font-bold text-text-tertiary">Workspace Name</Label>
+          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required className="h-9 rounded-xl bg-bg-primary border-border/60" />
         </div>
 
-        <div className="space-y-1">
-          <Label htmlFor="description">Description</Label>
-          <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} className="resize-none h-24" />
+        <div className="space-y-1.5">
+          <Label htmlFor="description" className="text-[10px] uppercase font-bold text-text-tertiary">Description</Label>
+          <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} className="resize-none h-24 rounded-xl bg-bg-primary border-border/60" />
         </div>
 
-        <Button type="submit" size="sm" disabled={updateMutation.isPending}>
+        <Button type="submit" size="sm" disabled={updateMutation.isPending} className="h-9 px-4 rounded-xl font-semibold active:scale-95 transition-all">
           {updateMutation.isPending ? 'Saving...' : 'Save Settings'}
         </Button>
       </form>
 
       {/* Danger Zone */}
-      <div className="space-y-4 rounded-lg border border-danger/30 bg-bg-secondary p-6">
-        <h2 className="text-sm font-semibold text-danger">Danger Zone</h2>
+      <div className="space-y-4 rounded-2xl border border-danger/30 bg-bg-secondary/45 p-6 select-none">
+        <h2 className="text-xs font-bold text-danger uppercase tracking-wider">Danger Zone</h2>
         <p className="text-xs text-text-secondary">
           Perform destructive operations on the workspace. These actions cannot be undone.
         </p>
 
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pt-2 border-t border-border">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pt-3 border-t border-border/40">
           <div>
-            <h3 className="text-xs font-semibold text-text-primary">Transfer Ownership</h3>
-            <p className="text-[11px] text-text-secondary">Appoint another workspace member as the owner.</p>
+            <h3 className="text-xs font-bold text-text-primary">Transfer Ownership</h3>
+            <p className="text-[10px] text-text-secondary mt-0.5">Appoint another workspace member as the owner.</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setTransferOpen(true)}>
+          <Button variant="outline" size="sm" onClick={() => setTransferOpen(true)} className="h-8.5 rounded-xl text-xs font-medium hover:bg-bg-hover active:scale-95 transition-all">
             Transfer Ownership
           </Button>
         </div>
 
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-border">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pt-3 border-t border-border/40">
           <div>
-            <h3 className="text-xs font-semibold text-danger">Delete Workspace</h3>
-            <p className="text-[11px] text-text-secondary">Permanently delete this workspace and all of its boards/tasks.</p>
+            <h3 className="text-xs font-bold text-danger">Delete Workspace</h3>
+            <p className="text-[10px] text-text-secondary mt-0.5">Permanently delete this workspace and all of its boards/tasks.</p>
           </div>
-          <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
+          <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)} className="h-8.5 rounded-xl text-xs font-medium active:scale-95 transition-all">
             Delete Workspace
           </Button>
         </div>

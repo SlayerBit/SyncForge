@@ -74,6 +74,86 @@ export function NotificationsPage() {
   const list = notificationsData?.data || []
   const filteredNotifications = filter === 'unread' ? list.filter((n: NotificationDto) => !n.read) : list
 
+  const getGrouped = () => {
+    const today: NotificationDto[] = []
+    const yesterday: NotificationDto[] = []
+    const earlier: NotificationDto[] = []
+
+    const startOfToday = new Date()
+    startOfToday.setHours(0, 0, 0, 0)
+
+    const startOfYesterday = new Date(startOfToday)
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1)
+
+    filteredNotifications.forEach((item: NotificationDto) => {
+      const date = new Date(item.createdAt)
+      if (date >= startOfToday) {
+        today.push(item)
+      } else if (date >= startOfYesterday) {
+        yesterday.push(item)
+      } else {
+        earlier.push(item)
+      }
+    })
+
+    return { today, yesterday, earlier }
+  }
+
+  const grouped = getGrouped()
+
+  const renderCard = (notification: NotificationDto) => (
+    <div
+      key={notification.id}
+      onClick={() => handleNotificationClick(notification)}
+      className={cn(
+        "flex items-start justify-between p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group active:scale-[0.99] hover:shadow-xs",
+        notification.read
+          ? 'bg-bg-primary hover:bg-bg-secondary/40 border-border/40 text-text-secondary'
+          : 'bg-bg-secondary hover:bg-bg-tertiary/60 border-border/80 shadow-sm text-text-primary'
+      )}
+    >
+      <div className="space-y-1.5 pr-4 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-xs text-text-primary">{notification.title}</span>
+          {!notification.read && (
+            <span className="h-1.5 w-1.5 rounded-full bg-accent-primary shrink-0 animate-pulse" />
+          )}
+        </div>
+        {notification.message && (
+          <p className="text-[11px] text-text-secondary leading-relaxed max-w-[540px]">
+            {notification.message}
+          </p>
+        )}
+        <span className="text-[9px] text-text-tertiary block pt-0.5">
+          {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+        {!notification.read && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-text-tertiary hover:text-text-primary hover:bg-bg-tertiary rounded-lg"
+            onClick={() => markReadMutation.mutate(notification.id)}
+            title="Mark as read"
+          >
+            <Check className="h-3.5 w-3.5" />
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-text-tertiary hover:text-danger hover:bg-danger/10 rounded-lg"
+          onClick={() => deleteMutation.mutate(notification.id)}
+          title="Delete"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </div>
+  )
+
   return (
     <div className="max-w-[760px] mx-auto py-8 px-4 space-y-6 select-none animate-fade-in text-text-primary">
       <div className="flex items-center justify-between border-b border-border/40 pb-5">
@@ -95,7 +175,7 @@ export function NotificationsPage() {
             size="sm"
             onClick={() => markAllReadMutation.mutate()}
             disabled={markAllReadMutation.isPending}
-            className="text-xs h-8 gap-1.5"
+            className="text-xs h-8.5 gap-1.5 rounded-xl border border-border/60"
           >
             <Check className="h-3.5 w-3.5" />
             Mark all read
@@ -143,59 +223,27 @@ export function NotificationsPage() {
           description="You don't have any notifications right now."
         />
       ) : (
-        <div className="space-y-2.5">
-          {filteredNotifications.map((notification: NotificationDto) => (
-            <div
-              key={notification.id}
-              onClick={() => handleNotificationClick(notification)}
-              className={cn(
-                "flex items-start justify-between p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden group active:scale-[0.99]",
-                notification.read
-                  ? 'bg-bg-primary hover:bg-bg-secondary/40 border-border/40 text-text-secondary'
-                  : 'bg-bg-secondary hover:bg-bg-tertiary/60 border-border/80 shadow-sm text-text-primary'
-              )}
-            >
-              <div className="space-y-1.5 pr-4 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-xs text-text-primary">{notification.title}</span>
-                  {!notification.read && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-accent-primary shrink-0 animate-pulse" />
-                  )}
-                </div>
-                {notification.message && (
-                  <p className="text-[11px] text-text-secondary leading-relaxed max-w-[540px]">
-                    {notification.message}
-                  </p>
-                )}
-                <span className="text-[9px] text-text-tertiary block pt-0.5">
-                  {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                {!notification.read && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-text-tertiary hover:text-text-primary hover:bg-bg-tertiary"
-                    onClick={() => markReadMutation.mutate(notification.id)}
-                    title="Mark as read"
-                  >
-                    <Check className="h-3.5 w-3.5" />
-                  </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-text-tertiary hover:text-danger hover:bg-danger/10"
-                  onClick={() => deleteMutation.mutate(notification.id)}
-                  title="Delete"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
+        <div className="space-y-6">
+          {grouped.today.length > 0 && (
+            <div className="space-y-2.5">
+              <h3 className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider pl-1.5">Today</h3>
+              {grouped.today.map(renderCard)}
             </div>
-          ))}
+          )}
+
+          {grouped.yesterday.length > 0 && (
+            <div className="space-y-2.5">
+              <h3 className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider pl-1.5">Yesterday</h3>
+              {grouped.yesterday.map(renderCard)}
+            </div>
+          )}
+
+          {grouped.earlier.length > 0 && (
+            <div className="space-y-2.5">
+              <h3 className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider pl-1.5">Earlier</h3>
+              {grouped.earlier.map(renderCard)}
+            </div>
+          )}
         </div>
       )}
     </div>

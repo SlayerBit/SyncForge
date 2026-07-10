@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Archive, Save, Edit3 } from 'lucide-react'
+import { Archive, Save, Edit3, ShieldAlert } from 'lucide-react'
 import { useArchiveBoardMutation, useUpdateBoardMutation } from '../api/board.queries'
 import { useWorkspaceMembersQuery } from '@/features/workspace/api/workspace.queries'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,7 @@ import { Avatar } from '@/components/shared/Avatar'
 import { usePresenceStore } from '@/stores/presence.store'
 import { BoardDto } from '@/types/common.types'
 import { toast } from 'sonner'
+import { motion } from 'framer-motion'
 
 interface BoardHeaderProps {
   board: BoardDto
@@ -66,26 +67,30 @@ export function BoardHeader({ board }: BoardHeaderProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-4 text-text-primary select-none">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/40 pb-4 text-text-primary select-none">
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 group">
+        <div className="flex items-center gap-2.5 group">
           {isEditing ? (
-            <div className="flex items-center gap-1.5 animate-scale-in">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-1.5"
+            >
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="h-8 text-sm font-semibold max-w-[200px]"
+                className="h-8 text-sm font-bold max-w-[200px] focus:ring-1 focus:ring-accent-primary"
                 onKeyDown={(e) => e.key === 'Enter' && handleUpdate()}
                 autoFocus
               />
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-success hover:bg-success/10 shrink-0" onClick={handleUpdate}>
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-500 hover:bg-emerald-500/10 shrink-0" onClick={handleUpdate}>
                 <Save className="h-4 w-4" />
               </Button>
-            </div>
+            </motion.div>
           ) : (
             <div className="flex items-center gap-2">
               <h1
-                className="text-base font-semibold tracking-tight cursor-pointer hover:text-accent-primary transition-colors flex items-center gap-1.5"
+                className="text-lg font-extrabold tracking-tight cursor-pointer hover:text-accent-primary transition-colors flex items-center gap-1.5"
                 onClick={() => setIsEditing(true)}
               >
                 {board.name}
@@ -93,17 +98,17 @@ export function BoardHeader({ board }: BoardHeaderProps) {
               </h1>
             </div>
           )}
-          <span className="text-[9px] font-bold text-text-tertiary px-1.5 py-0.5 rounded-full bg-bg-tertiary border border-border/40">
+          <span className="text-[9px] font-extrabold text-text-secondary px-2 py-0.5 rounded-full bg-bg-hover border border-border/30">
             v{board.version}
           </span>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        {/* Board Presence avatar list */}
+      <div className="flex items-center gap-5">
+        {/* Board Presence list */}
         {activeMembersOnBoard.length > 0 && (
           <div className="flex -space-x-1.5 items-center">
-            <span className="text-[10px] text-text-tertiary mr-2 select-none">Active:</span>
+            <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider mr-2">Online</span>
             {activeMembersOnBoard.map((p) => (
               <Avatar
                 key={p.userId}
@@ -119,18 +124,18 @@ export function BoardHeader({ board }: BoardHeaderProps) {
         <Button
           variant="outline"
           size="sm"
-          className="text-xs hover:bg-danger/10 hover:text-danger hover:border-danger/30 transition-all gap-1.5"
+          className="text-xs font-semibold h-8 rounded-lg border-border hover:bg-rose-500/10 hover:text-rose-500 hover:border-rose-500/30 transition-all gap-1.5 active:scale-[0.98]"
           onClick={() => setArchiveOpen(true)}
         >
           <Archive className="h-3.5 w-3.5" />
-          Archive Board
+          Archive
         </Button>
       </div>
 
       <ConfirmDialog
         open={archiveOpen}
         title="Archive Board"
-        description="Are you sure you want to archive this board? You will not be able to interact with its columns or tasks unless it is restored by an admin."
+        description="Are you sure you want to archive this board? Active tasks and columns will be hidden from workspace members."
         confirmLabel="Archive"
         variant="destructive"
         onConfirm={handleArchive}

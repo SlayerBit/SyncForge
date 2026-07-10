@@ -95,7 +95,7 @@ export function Avatar({ displayName = '?', email, src, size = 'md', status, cla
       {status && (
         <span
           className={cn(
-            'absolute bottom-0 right-0 block rounded-full ring-2 ring-background',
+            'absolute bottom-0 right-0 block rounded-full ring-2 ring-bg-primary',
             presenceSizeMap[size],
             presenceColorMap[status]
           )}

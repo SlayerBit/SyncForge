@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { useLoginMutation } from '../api/auth.queries'
 import { authApi } from '../api/auth.api'
 import { toast } from 'sonner'
+import { motion } from 'framer-motion'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -71,87 +72,114 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, cubicBezier: [0.16, 1, 0.3, 1] }}
+      className="space-y-6 text-text-primary"
+    >
       <div className="space-y-1">
-        <Label htmlFor="email">Email address</Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="name@example.com"
-          {...register('email')}
-          disabled={loginMutation.isPending}
-        />
-        {errors.email && (
-          <p className="text-xs text-danger font-medium">{errors.email.message}</p>
-        )}
+        <h2 className="text-xl font-bold tracking-tight">Welcome back</h2>
+        <p className="text-xs text-text-secondary">
+          Enter your workspace details below to sign in.
+        </p>
       </div>
 
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="password">Password</Label>
-          <Link
-            to="/forgot-password"
-            className="text-xs font-semibold text-accent-primary hover:text-accent-primary-hover"
-          >
-            Forgot password?
-          </Link>
-        </div>
-        <div className="relative">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="email" className="text-[10px] uppercase font-bold tracking-wider text-text-tertiary">
+            Email Address
+          </Label>
           <Input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="••••••••"
-            className="pr-10"
-            {...register('password')}
+            id="email"
+            type="email"
+            placeholder="name@example.com"
+            {...register('email')}
             disabled={loginMutation.isPending}
+            className="h-9 text-xs focus:ring-1 focus:ring-accent-primary"
           />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-tertiary hover:text-text-secondary"
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
+          {errors.email && (
+            <p className="text-[10px] text-danger font-semibold mt-1">{errors.email.message}</p>
+          )}
         </div>
-        {errors.password && (
-          <p className="text-xs text-danger font-medium">{errors.password.message}</p>
+
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password" className="text-[10px] uppercase font-bold tracking-wider text-text-tertiary">
+              Password
+            </Label>
+            <Link
+              to="/forgot-password"
+              className="text-[10px] font-bold text-accent-primary hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              className="pr-10 h-9 text-xs focus:ring-1 focus:ring-accent-primary"
+              {...register('password')}
+              disabled={loginMutation.isPending}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-tertiary hover:text-text-secondary transition-colors"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {errors.password && (
+            <p className="text-[10px] text-danger font-semibold mt-1">{errors.password.message}</p>
+          )}
+        </div>
+
+        {showResend && (
+          <div className="p-3.5 rounded-xl border border-warning/35 bg-warning/5 text-xs text-text-primary space-y-2">
+            <p className="text-text-secondary leading-relaxed">
+              Your email is not verified yet. Please check your inbox or request a new verification link.
+            </p>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="w-full h-8.5 text-xs font-semibold"
+              onClick={handleResendVerification}
+              disabled={resending}
+            >
+              {resending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+              Resend Verification Link
+            </Button>
+          </div>
         )}
-      </div>
 
-      {showResend && (
-        <div className="p-3.5 rounded-lg border border-warning/30 bg-warning/5 text-xs text-text-primary space-y-2">
-          <p className="text-text-secondary leading-normal">
-            Your email is not verified yet. Please check your inbox or request a new verification link.
-          </p>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="w-full h-8 text-xs font-semibold"
-            onClick={handleResendVerification}
-            disabled={resending}
-          >
-            {resending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
-            Resend Verification Link
-          </Button>
-        </div>
-      )}
-
-      <Button type="submit" className="w-full mt-2" disabled={loginMutation.isPending}>
-        {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Sign In
-      </Button>
-
-      <p className="text-center text-xs text-text-secondary pt-2">
-        Don't have an account?{' '}
-        <Link
-          to="/register"
-          className="font-semibold text-accent-primary hover:text-accent-primary-hover"
+        <Button
+          type="submit"
+          className="w-full h-11.5 mt-4 text-[11px] font-bold tracking-wider uppercase bg-gradient-to-b from-[#1e293b] via-[#0f172a] to-[#020617] hover:from-[#334155] hover:to-[#0f172a] text-white border-t border-slate-700/60 shadow-[0_4px_16px_rgba(15,23,42,0.25),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_6px_20px_rgba(15,23,42,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 transition-all duration-200 active:scale-[0.98] active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none rounded-[12px] hover:-translate-y-0.5"
+          disabled={loginMutation.isPending}
         >
-          Sign up
-        </Link>
-      </p>
-    </form>
+          {loginMutation.isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />
+          ) : (
+            'Sign In'
+          )}
+        </Button>
+
+        <p className="text-center text-xs text-text-secondary pt-2">
+          New to SyncForge?{' '}
+          <Link
+            to="/register"
+            className="font-bold text-accent-primary hover:underline"
+          >
+            Create an account
+          </Link>
+        </p>
+      </form>
+    </motion.div>
   )
 }
+export default LoginForm

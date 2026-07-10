@@ -28,10 +28,12 @@ import { wsService } from '@/lib/websocket'
 import { usePresenceStore } from '@/stores/presence.store'
 import { useQueryClient } from '@tanstack/react-query'
 import { ColumnDto, TaskDto } from '@/types/common.types'
-import { Plus } from 'lucide-react'
+import { Plus, Calendar as CalendarIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { BoardSkeleton } from '@/components/shared/LoadingSkeleton'
+import { cn } from '@/lib/utils'
+import { motion } from 'framer-motion'
 
 export function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>()
@@ -49,6 +51,28 @@ export function BoardPage() {
   const [createTaskOpen, setCreateTaskOpen] = useState(false)
   const [targetColumnId, setTargetColumnId] = useState<string | null>(null)
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'board' | 'list' | 'calendar' | 'timeline' | 'analytics' | 'roadmap'>('board')
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement?.tagName
+      if (activeEl === 'INPUT' || activeEl === 'TEXTAREA' || document.activeElement?.getAttribute('contenteditable') === 'true') {
+        return
+      }
+
+      if (e.key.toLowerCase() === 'c') {
+        e.preventDefault()
+        // If targetColumnId is null, pick the first column of the board as fallback
+        if (!targetColumnId && board?.columns && board.columns.length > 0) {
+          setTargetColumnId(board.columns[0].id)
+        }
+        setCreateTaskOpen(true)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [board, targetColumnId])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -183,67 +207,166 @@ export function BoardPage() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden text-text-primary p-6 space-y-4 animate-fade-in">
-      <BoardHeader board={board} />
+    <div className="relative flex flex-col h-full overflow-hidden text-text-primary p-6 space-y-4 animate-fade-in">
+      {/* Blueprint grid pattern overlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(#5c4fe504_1.5px,transparent_1.5px)] [background-size:20px_20px] pointer-events-none" />
+      <div className="relative z-10 flex flex-col h-full overflow-hidden space-y-4">
+        <BoardHeader board={board} />
 
-      <div className="flex-1 overflow-x-auto min-h-0">
-        <DndContext
-          sensors={sensors}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="flex gap-4 items-start pb-4">
-            <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-              {columns.map((column) => (
-                <ColumnContainer
-                  key={column.id}
-                  boardId={board.id}
-                  column={column}
-                  tasks={column.tasks || []}
-                  onAddTask={(colId) => {
-                    setTargetColumnId(colId)
-                    setCreateTaskOpen(true)
-                  }}
-                  onTaskClick={(task) => setDetailTaskId(task.id)}
-                />
-              ))}
-            </SortableContext>
-
-            {/* Add Column Button */}
-            <Button
-              onClick={() => setCreateColOpen(true)}
-              variant="outline"
-              className="w-[280px] shrink-0 border-dashed border-border bg-bg-secondary hover:bg-bg-tertiary h-[48px] justify-start gap-2 text-xs font-semibold text-text-secondary"
+        {/* View Selection Tabs */}
+        <div className="flex items-center gap-1 border-b border-border/40 pb-1 text-xs select-none">
+          {[
+            { id: 'board', label: 'Board view' },
+            { id: 'list', label: 'List view' },
+            { id: 'calendar', label: 'Calendar' },
+            { id: 'timeline', label: 'Timeline' },
+            { id: 'analytics', label: 'Analytics' },
+            { id: 'roadmap', label: 'Roadmap' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={cn(
+                "px-3 py-1.5 rounded-lg font-bold transition-all relative",
+                activeTab === tab.id
+                  ? "bg-bg-secondary border border-border/50 text-text-primary shadow-xs"
+                  : "text-text-secondary hover:text-text-primary hover:bg-bg-secondary/35"
+              )}
             >
-              <Plus className="h-4 w-4" />
-              Add Column
-            </Button>
-          </div>
+              {tab.label}
+              {activeTab === tab.id && (
+                <motion.div 
+                  layoutId="activeViewTab" 
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-primary rounded-full" 
+                />
+              )}
+            </button>
+          ))}
+        </div>
 
-          <DragOverlay
-            dropAnimation={{
-              sideEffects: defaultDropAnimationSideEffects({
-                styles: {
-                  active: {
-                    opacity: '0.5',
-                  },
-                },
-              }),
-            }}
-          >
-            {activeId && activeType === 'Column' && activeColumn && (
-              <ColumnContainer
-                boardId={board.id}
-                column={activeColumn}
-                tasks={activeColumn.tasks || []}
-              />
-            )}
-            {activeId && activeType === 'Task' && activeTask && (
-              <TaskCard task={activeTask} />
-            )}
-          </DragOverlay>
-        </DndContext>
-      </div>
+        {activeTab === 'board' && (
+          <div className="flex-1 overflow-x-auto min-h-0">
+            <DndContext
+              sensors={sensors}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="flex gap-4 items-start pb-4">
+                <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
+                  {columns.map((column) => (
+                    <ColumnContainer
+                      key={column.id}
+                      boardId={board.id}
+                      column={column}
+                      tasks={column.tasks || []}
+                      onAddTask={(colId) => {
+                        setTargetColumnId(colId)
+                        setCreateTaskOpen(true)
+                      }}
+                      onTaskClick={(task) => setDetailTaskId(task.id)}
+                    />
+                  ))}
+                </SortableContext>
+
+                {/* Add Column Button */}
+                <Button
+                  onClick={() => setCreateColOpen(true)}
+                  variant="outline"
+                  className="w-[285px] shrink-0 border-dashed border-border/80 bg-bg-secondary/40 hover:bg-bg-secondary/80 hover:border-accent-primary/30 h-[48px] rounded-2xl justify-start gap-2 text-xs font-bold text-text-secondary active:scale-[0.98] transition-all"
+                >
+                  <Plus className="h-4 w-4 text-text-tertiary" />
+                  Add Column
+                </Button>
+              </div>
+
+              <DragOverlay
+                dropAnimation={{
+                  sideEffects: defaultDropAnimationSideEffects({
+                    styles: {
+                      active: {
+                        opacity: '0.5',
+                      },
+                    },
+                  }),
+                }}
+              >
+                {activeId && activeType === 'Column' && activeColumn && (
+                  <ColumnContainer
+                    boardId={board.id}
+                    column={activeColumn}
+                    tasks={activeColumn.tasks || []}
+                  />
+                )}
+                {activeId && activeType === 'Task' && activeTask && (
+                  <TaskCard task={activeTask} />
+                )}
+              </DragOverlay>
+            </DndContext>
+          </div>
+        )}
+
+        {activeTab === 'list' && (
+          <div className="flex-1 overflow-auto bg-bg-secondary/20 border border-border/60 rounded-2xl p-4.5 max-w-5xl">
+            <table className="w-full text-left text-xs border-collapse select-none">
+              <thead>
+                <tr className="border-b border-border/50 bg-bg-secondary/40 text-text-secondary font-bold">
+                  <th className="p-3.5">Identifier</th>
+                  <th className="p-3.5">Title</th>
+                  <th className="p-3.5">Status Column</th>
+                  <th className="p-3.5">Priority Level</th>
+                  <th className="p-3.5">Due Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/30">
+                {columns.flatMap(col => (col.tasks || []).map(task => (
+                  <tr 
+                    key={task.id} 
+                    onClick={() => setDetailTaskId(task.id)}
+                    className="hover:bg-bg-secondary/60 cursor-pointer transition-colors"
+                  >
+                    <td className="p-3.5 font-mono text-[10px] text-text-tertiary">#{task.id.slice(0, 5)}</td>
+                    <td className="p-3.5 font-semibold text-text-primary">{task.title}</td>
+                    <td className="p-3.5">
+                      <span className="bg-bg-secondary border border-border/40 px-2 py-0.5 rounded-md text-[10px]">
+                        {col.name}
+                      </span>
+                    </td>
+                    <td className="p-3.5">
+                      <span className={cn(
+                        "text-[9px] font-extrabold px-2 py-0.5 rounded border uppercase",
+                        task.priority === 'HIGH' || task.priority === 'URGENT' ? 'bg-rose-500/10 text-rose-600 border-rose-500/20' : 'bg-bg-primary text-text-secondary border-border/40'
+                      )}>
+                        {task.priority}
+                      </span>
+                    </td>
+                    <td className="p-3.5 text-text-tertiary">
+                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}
+                    </td>
+                  </tr>
+                )))}
+                {columns.flatMap(c => c.tasks || []).length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-text-tertiary italic">
+                      No tasks found. Create a column and task to get started!
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeTab !== 'board' && activeTab !== 'list' && (
+          <div className="flex-1 flex flex-col items-center justify-center p-12 border border-dashed border-border/70 rounded-2xl bg-bg-secondary/25">
+            <CalendarIcon className="h-10 w-10 text-text-tertiary opacity-45 animate-pulse" />
+            <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider mt-4">
+              {activeTab} layout coming soon
+            </h4>
+            <p className="text-[10px] text-text-secondary mt-1.5 max-w-[280px] text-center leading-relaxed">
+              We are finalizing the blueprint for the dynamic {activeTab} view. Stay tuned for updates!
+            </p>
+          </div>
+        )}
 
       {/* Dialogs */}
       <CreateColumnDialog
@@ -266,6 +389,7 @@ export function BoardPage() {
         open={!!detailTaskId}
         onOpenChange={(open) => !open && setDetailTaskId(null)}
       />
+      </div>
     </div>
   )
 }

@@ -29,10 +29,11 @@ import { activityApi, ActivityLogDto } from '../api/activity.api'
 import { labelApi } from '../api/label.api'
 import { Avatar } from '@/components/shared/Avatar'
 import { useAuthStore } from '@/stores/auth.store'
-import { Calendar, AlertCircle, MessageSquare, Trash2, X, Plus, Edit2, History, Send } from 'lucide-react'
+import { Calendar, AlertCircle, MessageSquare, Trash2, X, Plus, Edit2, History, Send, Copy, Link2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface TaskDetailDialogProps {
   taskId: string | null
@@ -73,24 +74,20 @@ export function TaskDetailDialog({
 
   const { user: currentUser } = useAuthStore()
 
-  // Local fields for editing title/description
   const [title, setTitle] = useState('')
   const [desc, setDesc] = useState('')
   const [newComment, setNewComment] = useState('')
   const [isEditingDesc, setIsEditingDesc] = useState(false)
   const [activeTab, setActiveTab] = useState<'comments' | 'activity'>('comments')
 
-  // Comment Editing state
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
   const [editingCommentContent, setEditingCommentContent] = useState('')
 
-  // Autocomplete Mentions state
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false)
   const [mentionQuery, setMentionQuery] = useState('')
   const [mentionIndex, setMentionIndex] = useState(-1)
 
-  // Query activity logs
-  const { data: activities, isLoading: loadingActivity } = useQuery({
+  const { data: activities } = useQuery({
     queryKey: ['task-activity', taskId],
     queryFn: () => activityApi.listTaskActivity(taskId!),
     enabled: !!taskId && open && activeTab === 'activity',
@@ -102,6 +99,19 @@ export function TaskDetailDialog({
       setDesc(task.description || '')
     }
   }, [task])
+
+  const handleCopyLink = () => {
+    if (!task) return
+    const taskUrl = `${window.location.origin}/boards/${boardId}?task=${task.id}`
+    navigator.clipboard.writeText(taskUrl)
+    toast.success('Task link copied to clipboard!')
+  }
+
+  const handleCopyIdentifier = () => {
+    if (!task) return
+    navigator.clipboard.writeText(task.identifier)
+    toast.success('Task ID copied to clipboard!')
+  }
 
   const handleUpdateField = (fields: Record<string, any>) => {
     if (!task) return
@@ -231,55 +241,79 @@ export function TaskDetailDialog({
     setShowMentionSuggestions(false)
   }
 
-  if (!open) return null
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[760px] max-h-[85vh] overflow-y-auto text-text-primary bg-bg-secondary border-border/80 p-5 sm:p-6 shadow-xl rounded-xl custom-scrollbar animate-scale-in">
+      <DialogContent className="fixed inset-y-0 right-0 left-auto translate-x-0 translate-y-0 z-50 h-full w-[640px] max-w-none border-l border-border/60 bg-bg-primary shadow-2xl p-0 flex flex-col sm:rounded-none outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right duration-300">
         {loadingTask || !task ? (
-          <div className="p-12 text-center text-xs text-text-secondary animate-pulse">Loading card details...</div>
+          <div className="p-16 text-center text-xs text-text-secondary animate-pulse font-medium">
+            Loading workpiece details...
+          </div>
         ) : (
-          <div className="space-y-5 select-none">
-            {/* Header */}
-            <div className="space-y-1">
+          <div className="flex-1 flex flex-col min-h-0">
+            {/* Header Title Editor */}
+            <div className="p-6 pb-4 border-b border-border/40 space-y-2 bg-bg-secondary/40 shrink-0">
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={() => handleUpdateField({ title })}
-                className="text-lg font-bold border-none bg-transparent hover:bg-bg-tertiary/40 focus:bg-bg-tertiary/60 px-2 py-1 -ml-2 rounded w-full text-text-primary transition-colors focus:outline-none focus:ring-0"
+                className="text-base font-extrabold border-none bg-transparent hover:bg-bg-hover/40 focus:bg-bg-hover/80 px-2 py-1 -ml-2 rounded-lg w-full text-text-primary focus:outline-none transition-colors"
               />
-              <div className="flex items-center gap-1.5 text-[10px] text-text-tertiary">
-                <span>Task Identifier:</span>
-                <span className="font-semibold text-text-secondary bg-bg-tertiary/60 border border-border/40 px-1.5 py-0.5 rounded">
-                  {task.identifier}
-                </span>
-                <span className="mx-1">•</span>
-                <span>Column:</span>
-                <span className="font-semibold text-text-secondary bg-bg-tertiary/60 border border-border/40 px-1.5 py-0.5 rounded">
+              <div className="flex items-center gap-2.5 text-[10px] text-text-secondary font-semibold">
+                <span className="text-text-tertiary">Identifier:</span>
+                <div className="flex items-center gap-1 bg-bg-hover px-2 py-0.5 rounded-md border border-border/40 font-mono select-all">
+                  <span>{task.identifier}</span>
+                  <button
+                    type="button"
+                    onClick={handleCopyIdentifier}
+                    className="hover:bg-bg-tertiary p-0.5 rounded text-text-tertiary hover:text-text-primary transition-all active:scale-90"
+                    title="Copy Task ID"
+                  >
+                    <Copy className="h-2.5 w-2.5" />
+                  </button>
+                </div>
+                <span className="text-text-tertiary">Column:</span>
+                <span className="bg-bg-hover px-2 py-0.5 rounded-md border border-border/40">
                   {task.status}
                 </span>
+
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="flex items-center gap-1 hover:bg-bg-tertiary px-2 py-0.5 rounded-md border border-border/60 text-text-tertiary hover:text-text-primary transition-all active:scale-95"
+                  title="Copy Task Link"
+                >
+                  <Link2 className="h-2.5 w-2.5" />
+                  <span>Copy Link</span>
+                </button>
               </div>
             </div>
 
-            {/* Main Content Split Grid */}
-            <div className="grid gap-6 md:grid-cols-3">
-              {/* Left Column: Description & Comments */}
-              <div className="md:col-span-2 space-y-5">
-                {/* Description */}
+            {/* Split Grid */}
+            <div className="flex-1 grid md:grid-cols-12 overflow-hidden min-h-0">
+              {/* Left Column (Main Scrollpane) */}
+              <div className="md:col-span-8 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                {/* Description Box */}
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">Description</Label>
+                  <Label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">
+                    Task Description
+                  </Label>
                   {isEditingDesc ? (
-                    <div className="space-y-2 animate-slide-up">
+                    <motion.div 
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-2"
+                    >
                       <Textarea
                         value={desc}
                         onChange={(e) => setDesc(e.target.value)}
-                        className="resize-none h-32 text-xs bg-bg-primary"
+                        className="resize-none h-32 text-xs bg-bg-secondary border-border/60 focus:ring-accent-primary"
                         placeholder="Add a detailed description..."
                         autoFocus
                       />
                       <div className="flex gap-2">
                         <Button
                           size="sm"
+                          className="text-xs bg-accent-primary hover:bg-accent-primary-hover h-8.5 font-bold px-4 active:scale-95"
                           onClick={() => {
                             handleUpdateField({ description: desc })
                             setIsEditingDesc(false)
@@ -287,28 +321,33 @@ export function TaskDetailDialog({
                         >
                           Save
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => setIsEditingDesc(false)}>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="text-xs h-8.5 font-bold" 
+                          onClick={() => setIsEditingDesc(false)}
+                        >
                           Cancel
                         </Button>
                       </div>
-                    </div>
+                    </motion.div>
                   ) : (
                     <div
                       onClick={() => setIsEditingDesc(true)}
-                      className="p-3 min-h-[96px] rounded-lg border border-border bg-bg-primary/40 cursor-pointer hover:bg-bg-primary/80 transition-colors text-xs text-text-secondary leading-relaxed"
+                      className="p-3.5 min-h-[96px] rounded-xl border border-border bg-bg-secondary/20 cursor-pointer hover:bg-bg-secondary/50 transition-colors text-xs text-text-secondary leading-relaxed"
                     >
-                      {task.description || <span className="italic text-text-tertiary/80">Add a detailed description...</span>}
+                      {task.description || <span className="italic text-text-tertiary/75">No description set. Click to define.</span>}
                     </div>
                   )}
                 </div>
 
-                {/* Tabs for Comments and Activity */}
-                <div className="flex items-center gap-4 border-b border-border/50 pb-1 pt-3">
+                {/* Tabs */}
+                <div className="flex items-center gap-5 border-b border-border/40 pb-1.5 pt-2">
                   <button
                     type="button"
                     onClick={() => setActiveTab('comments')}
                     className={cn(
-                      "pb-2 text-xs font-semibold border-b-2 px-1 transition-all relative",
+                      "pb-2 text-xs font-bold border-b-2 px-1 transition-all relative",
                       activeTab === 'comments'
                         ? 'border-accent-primary text-text-primary'
                         : 'border-transparent text-text-secondary hover:text-text-primary'
@@ -320,14 +359,14 @@ export function TaskDetailDialog({
                     type="button"
                     onClick={() => setActiveTab('activity')}
                     className={cn(
-                      "pb-2 text-xs font-semibold border-b-2 px-1 transition-all flex items-center gap-1.5 relative",
+                      "pb-2 text-xs font-bold border-b-2 px-1 transition-all flex items-center gap-1.5 relative",
                       activeTab === 'activity'
                         ? 'border-accent-primary text-text-primary'
                         : 'border-transparent text-text-secondary hover:text-text-primary'
                     )}
                   >
                     <History className="h-3.5 w-3.5" />
-                    Activity
+                    Activity Logs
                   </button>
                 </div>
 
@@ -343,19 +382,24 @@ export function TaskDetailDialog({
                           placeholder="Write a comment... (use @ to mention)"
                           value={newComment}
                           onChange={(e) => handleCommentChange(e.target.value)}
-                          className="text-xs bg-bg-primary/50"
+                          className="text-xs bg-bg-secondary border-border/80 h-9"
                           disabled={addCommentMutation.isPending}
                         />
-                        <Button type="submit" size="sm" disabled={addCommentMutation.isPending} className="gap-1">
-                          <Send className="h-3 w-3" />
+                        <Button 
+                          type="submit" 
+                          size="sm" 
+                          disabled={addCommentMutation.isPending} 
+                          className="gap-1.5 h-9 bg-accent-primary hover:bg-accent-primary-hover active:scale-95 transition-all"
+                        >
+                          <Send className="h-3.5 w-3.5" />
                           Send
                         </Button>
                       </form>
 
                       {/* Mentions Suggestion Popover */}
                       {showMentionSuggestions && (
-                        <div className="absolute left-0 bottom-full mb-1.5 bg-bg-secondary border border-border rounded-lg shadow-xl max-h-40 overflow-y-auto w-64 z-50 p-1 text-xs space-y-0.5 custom-scrollbar">
-                          <div className="px-2.5 py-1.5 text-[9px] text-text-tertiary font-bold uppercase tracking-wider border-b border-border/40 mb-1">
+                        <div className="absolute left-0 bottom-full mb-1.5 bg-bg-primary border border-border/80 rounded-xl shadow-xl max-h-40 overflow-y-auto w-64 z-50 p-1 text-xs space-y-0.5 custom-scrollbar">
+                          <div className="px-2.5 py-1.5 text-[9px] text-text-tertiary font-bold uppercase tracking-wider border-b border-border/30 mb-1">
                             Mention Team Members
                           </div>
                           {members
@@ -369,7 +413,7 @@ export function TaskDetailDialog({
                                 key={m.userId}
                                 type="button"
                                 onClick={() => selectMention(m)}
-                                className="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-bg-tertiary text-xs transition-colors flex items-center gap-2"
+                                className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-bg-hover text-xs transition-colors flex items-center gap-2"
                               >
                                 <Avatar displayName={m.displayName} size="xs" />
                                 <div className="truncate">
@@ -383,21 +427,21 @@ export function TaskDetailDialog({
                     </div>
 
                     {/* Comments Feed */}
-                    <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                    <div className="space-y-3">
                       {loadingComments ? (
-                        <p className="text-[10px] text-text-tertiary animate-pulse">Loading comments...</p>
+                        <p className="text-[10px] text-text-tertiary animate-pulse font-medium">Loading conversation...</p>
                       ) : !comments || comments.length === 0 ? (
-                        <p className="text-[11px] text-text-tertiary italic py-3 text-center">No comments yet. Start the conversation!</p>
+                        <p className="text-[11px] text-text-tertiary italic py-6 text-center">No comments yet. Start the conversation!</p>
                       ) : (
                         comments.map((comment) => (
                           <div
                             key={comment.id}
-                            className="flex gap-3 text-xs bg-bg-primary/20 p-3 rounded-lg border border-border/40 hover:border-border/80 transition-colors"
+                            className="flex gap-3 text-xs bg-bg-secondary/40 p-3 rounded-xl border border-border/40 hover:border-border transition-all"
                           >
                             <Avatar displayName={comment.author.displayName} size="xs" />
-                            <div className="flex-1 space-y-1">
-                              <div className="flex justify-between items-center text-[10px] text-text-tertiary">
-                                <span className="font-semibold text-text-primary">
+                            <div className="flex-1 space-y-1.5">
+                              <div className="flex justify-between items-center text-[10px] text-text-tertiary font-semibold">
+                                <span className="text-text-primary font-bold">
                                   {comment.author.displayName}
                                 </span>
                                 <div className="flex items-center gap-2">
@@ -407,7 +451,7 @@ export function TaskDetailDialog({
                                     })}
                                   </span>
                                   {comment.author.id === currentUser?.id && (
-                                    <div className="flex items-center gap-1.5">
+                                    <div className="flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity">
                                       <button
                                         type="button"
                                         onClick={() => {
@@ -415,7 +459,6 @@ export function TaskDetailDialog({
                                           setEditingCommentContent(comment.content)
                                         }}
                                         className="text-text-tertiary hover:text-text-primary transition-colors"
-                                        title="Edit comment"
                                       >
                                         <Edit2 className="h-3 w-3" />
                                       </button>
@@ -423,7 +466,6 @@ export function TaskDetailDialog({
                                         type="button"
                                         onClick={() => deleteCommentMutation.mutate(comment.id)}
                                         className="text-text-tertiary hover:text-danger transition-colors"
-                                        title="Delete comment"
                                       >
                                         <Trash2 className="h-3 w-3" />
                                       </button>
@@ -437,7 +479,7 @@ export function TaskDetailDialog({
                                   <Textarea
                                     value={editingCommentContent}
                                     onChange={(e) => setEditingCommentContent(e.target.value)}
-                                    className="resize-none h-16 text-xs"
+                                    className="resize-none h-16 text-xs bg-bg-primary focus:ring-accent-primary"
                                   />
                                   <div className="flex gap-1.5">
                                     <Button
@@ -473,18 +515,16 @@ export function TaskDetailDialog({
                 ) : (
                   /* Activity Timeline */
                   <div className="space-y-4 pt-1">
-                    {loadingActivity ? (
-                      <p className="text-[10px] text-text-tertiary animate-pulse">Loading activity...</p>
-                    ) : !activities || !activities.data || activities.data.length === 0 ? (
-                      <p className="text-[10px] text-text-tertiary italic text-center py-3">No activity logged.</p>
+                    {!activities || !activities.data || activities.data.length === 0 ? (
+                      <p className="text-[10px] text-text-tertiary italic text-center py-6">No activity logged.</p>
                     ) : (
-                      <div className="space-y-3 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-[1px] before:bg-border/60 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                      <div className="space-y-3 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-[1px] before:bg-border/60 pl-1">
                         {activities.data.map((act: ActivityLogDto) => (
                           <div key={act.id} className="flex gap-3 text-xs pl-1">
-                            <div className="h-5 w-5 rounded-full bg-bg-tertiary border border-border flex items-center justify-center text-[9px] font-bold text-text-secondary shrink-0 z-10">
+                            <div className="h-5 w-5 rounded-full bg-bg-hover border border-border flex items-center justify-center text-[9px] font-bold text-text-secondary shrink-0 z-10">
                               {act.actorDisplayName ? act.actorDisplayName[0].toUpperCase() : 'S'}
                             </div>
-                            <div className="flex-1 space-y-0.5 pt-0.5">
+                            <div className="flex-1 space-y-1 pt-0.5">
                               <p className="text-[11px] text-text-secondary">
                                 <span className="font-semibold text-text-primary">
                                   {act.actorDisplayName}
@@ -492,11 +532,11 @@ export function TaskDetailDialog({
                                 {act.action}
                               </p>
                               {act.details && (
-                                <p className="text-[10px] text-text-tertiary bg-bg-primary/30 p-1.5 rounded border border-border/40">
+                                <p className="text-[10px] text-text-tertiary bg-bg-secondary p-2 rounded-lg border border-border/40 leading-normal">
                                   {act.details}
                                 </p>
                               )}
-                              <span className="text-[9px] text-text-tertiary block">
+                              <span className="text-[9px] text-text-tertiary block font-medium">
                                 {formatDistanceToNow(new Date(act.createdAt), {
                                   addSuffix: true,
                                 })}
@@ -510,22 +550,22 @@ export function TaskDetailDialog({
                 )}
               </div>
 
-              {/* Right Column: Properties Sidebar */}
-              <div className="space-y-4 rounded-xl border border-border/80 bg-bg-primary/20 p-4 h-fit">
-                {/* Priority */}
+              {/* Right Column (Sidebar Inspector) */}
+              <div className="md:col-span-4 p-6 border-l border-border/40 bg-bg-secondary/30 space-y-5 overflow-y-auto custom-scrollbar">
+                {/* Priority Selection */}
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
+                  <Label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 text-text-tertiary/70" />
                     Priority
                   </Label>
                   <Select
                     value={task.priority}
                     onValueChange={(val) => handleUpdateField({ priority: val })}
                   >
-                    <SelectTrigger className="h-8 text-xs bg-bg-secondary border-border/80">
+                    <SelectTrigger className="h-8.5 text-xs bg-bg-primary border-border/60 rounded-lg shadow-xs">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-xl">
                       <SelectItem value="LOW">Low</SelectItem>
                       <SelectItem value="MEDIUM">Medium</SelectItem>
                       <SelectItem value="HIGH">High</SelectItem>
@@ -536,37 +576,37 @@ export function TaskDetailDialog({
 
                 {/* Due Date */}
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
+                  <Label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5 text-text-tertiary/70" />
                     Due Date
                   </Label>
                   <Input
                     type="date"
                     value={task.dueDate ? task.dueDate.split('T')[0] : ''}
                     onChange={(e) => handleUpdateField({ dueDate: e.target.value || null })}
-                    className="h-8 text-xs bg-bg-secondary border-border/80"
+                    className="h-8.5 text-xs bg-bg-primary border-border/60 rounded-lg shadow-xs"
                   />
                 </div>
 
                 {/* Assignees Selector */}
-                <div className="space-y-2 border-t border-border/40 pt-3">
+                <div className="space-y-2 border-t border-border/40 pt-4">
                   <Label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider block">Assignees</Label>
                   <div className="flex flex-wrap gap-1 mb-1">
                     {task.assignees?.map((a) => (
-                      <span key={a.id} className="inline-flex items-center gap-1 text-[10px] bg-bg-secondary px-2 py-0.5 rounded-full border border-border/60 text-text-secondary">
+                      <span key={a.id} className="inline-flex items-center gap-1 text-[10px] font-semibold bg-bg-primary px-2.5 py-0.5 rounded-full border border-border/80 text-text-secondary">
                         {a.displayName}
                         <button onClick={() => handleAssigneeChange(a.id)}>
-                          <X className="h-2.5 w-2.5 text-text-tertiary hover:text-danger transition-colors" />
+                          <X className="h-2.5 w-2.5 text-text-tertiary hover:text-danger transition-colors ml-0.5" />
                         </button>
                       </span>
                     ))}
                   </div>
 
                   <Select onValueChange={handleAssigneeChange}>
-                    <SelectTrigger className="h-8 text-xs bg-bg-secondary border-border/80">
+                    <SelectTrigger className="h-8 text-xs bg-bg-primary border-border/60 rounded-lg">
                       <SelectValue placeholder="Add assignee" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-xl">
                       {members?.filter(m => !task.assignees?.some(a => a.id === m.userId)).map((m) => (
                         <SelectItem key={m.userId} value={m.userId}>
                           {m.displayName}
@@ -577,28 +617,28 @@ export function TaskDetailDialog({
                 </div>
 
                 {/* Labels Selector */}
-                <div className="space-y-2 border-t border-border/40 pt-3">
+                <div className="space-y-2 border-t border-border/40 pt-4">
                   <Label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider block">Labels</Label>
                   <div className="flex flex-wrap gap-1 mb-1">
                     {task.labels?.map((l) => (
                       <span
                         key={l.id}
-                        style={{ backgroundColor: l.color + '15', color: l.color, borderColor: l.color }}
-                        className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border"
+                        style={{ backgroundColor: l.color + '15', color: l.color, borderColor: l.color + '30' }}
+                        className="inline-flex items-center gap-1 text-[9px] font-bold px-2.5 py-0.5 rounded-full border"
                       >
                         {l.name}
                         <button onClick={() => handleLabelChange(l.id)}>
-                          <X className="h-2.5 w-2.5 hover:text-danger transition-colors" />
+                          <X className="h-2.5 w-2.5 hover:text-danger transition-colors ml-0.5" />
                         </button>
                       </span>
                     ))}
                   </div>
 
                   <Select onValueChange={handleLabelChange}>
-                    <SelectTrigger className="h-8 text-xs bg-bg-secondary border-border/80">
+                    <SelectTrigger className="h-8 text-xs bg-bg-primary border-border/60 rounded-lg">
                       <SelectValue placeholder="Add label" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-xl">
                       {labels?.filter(l => !task.labels?.some(tl => tl.id === l.id)).map((l) => (
                         <SelectItem key={l.id} value={l.id}>
                           {l.name}
